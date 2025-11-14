@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AutoBlog Pro - Starting...</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+        }
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .status {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 30px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .details {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .details-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .log-line {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+        .error {
+            background: rgba(220, 38, 38, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #dc2626;
+        }
+        .success {
+            background: rgba(34, 197, 94, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #22c55e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">⚡ AutoBlog Pro</div>
+        <div class="spinner"></div>
+        <div class="status" id="status">Starting local application...</div>
+        
+        <div class="details">
+            <div class="details-title">Startup Log</div>
+            <div id="logs">
+                <div class="log-line">Starting AutoBlog Pro on your computer...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        // Listen for log updates
+        ipcRenderer.on('startup-log', (event, message) => {
+            const logs = document.getElementById('logs');
+            const logLine = document.createElement('div');
+            logLine.className = 'log-line';
+            logLine.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(logLine);
+            logs.scrollTop = logs.scrollHeight;
+        });
+        
+        // Listen for status updates
+        ipcRenderer.on('startup-status', (event, status) => {
+            document.getElementById('status').textContent = status;
+        });
+        
+        // Listen for errors
+        ipcRenderer.on('startup-error', (event, error) => {
+            const container = document.querySelector('.container');
+            document.querySelector('.spinner').style.display = 'none';
+            document.getElementById('status').innerHTML = `
+                <div class="error">
+                    <h2>❌ Startup Failed</h2>
+                    <p>${error}</p>
+                    <br>
+                    <p style="font-size: 16px;">Please check the logs below for details.</p>
+                </div>
+            `;
+        });
+        
+        // Listen for success
+        ipcRenderer.on('startup-success', (event) => {
+            document.getElementById('status').innerHTML = `
+                <div class="success">
+                    <h2>✅ Ready!</h2>
+                    <p>Opening AutoBlog Pro...</p>
+                </div>
+            `;
+            
+            // Redirect after 1 second
+            setTimeout(() => {
+                window.location.href = 'http://localhost:3001';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
